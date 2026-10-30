@@ -16,6 +16,8 @@ Tour: /video/meersh-tour.mp4, a narrated three-minute video of the real shell in
 ## Authority
 
 - Every pipeline runs under a principal: user, script, plan (written by `?`), actor (a model acting on piped objects) or agent:<name>.
+- user and script:<path> may do what Unix allows. Protected paths ask, and so does a target that an LLM stage upstream picked.
+- plan, actor and agent:<name> are model principals with the same defaults. They may create files in the project and change, move or delete what they created. Other files in the project ask (trash or snapshot). Files outside the project, protected paths and deletes that nothing can restore are denied. External programs ask and run in an overlay. A local model is allowed, a cloud model asks. They may never change policies, run `undo` or switch the backend, and a plan holds at most 50 of their actions.
 - Commands ask for a capability with the concrete target right before they act (fs.create, fs.write, fs.delete, fs.move, fs.chmod, proc.spawn, proc.signal, exec, llm.send).
 - A shared ledger records what each session and agent created. A model may change or delete what it created itself. Everything else needs the user or a policy rule. Protected paths (/, the home directory, .git, ~/.ssh and system directories) are never available to models.
 - Statements that write, delete or call a model are planned first. The user approves all rows, some rows, or a narrow rule. Every action is journaled with its inverse, and `undo` reverses it.

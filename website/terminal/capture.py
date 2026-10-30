@@ -33,6 +33,10 @@ CAPTURES = {
         "touch draft.txt; rm draft.txt; undo | select action target result",
     ],
     "actor": ['ls | llm "delete all files that are larger than 5mb"'],
+    "roles": [
+        "[user plan actor agent:claude] | each { policy explain fs.delete dump.sql -p $it } | select principal decision because",
+        "[README.md /etc/hostname] | each { policy explain fs.write $it -p agent:claude } | select target decision because",
+    ],
 }
 NEEDS_MODEL = {"actor"}
 

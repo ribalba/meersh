@@ -35,6 +35,7 @@
           <a href="#objects">Objects</a>
           <a href="#models">Models</a>
           <a href="#authority">Authority</a>
+          <a href="#roles">Roles</a>
           <a href="#agents">Agents</a>
           <a href="#start">Get started</a>
           <a class="ui small primary button" href="https://github.com/ribalba/meersh" target="_blank" rel="noopener">
@@ -300,6 +301,166 @@ principal  actor
 │ 0 │ trash  │ draft.txt │ restored from the trash │
 ╰───┴────────┴───────────┴─────────────────────────╯</pre>
 <!-- /capture:authority -->
+      </div>
+    </section>
+
+    <!-- Roles -->
+    <section id="roles" class="landing-features">
+      <h2 class="landing-section-title">Five roles, each with its own rights</h2>
+      <p class="landing-section-lede">
+        Unix asks only which user runs a program, and every program of that user may delete
+        every file of that user. meersh also asks who wrote the command. A line you typed, a
+        script, the assistant, a model and a coding agent each run in a role of their own, and
+        each role has its own rights.
+      </p>
+
+      <div class="landing-roles">
+        <article class="landing-card landing-role-person">
+          <div class="landing-card-body">
+            <div class="landing-role-name"><i class="user icon"></i><code>user</code></div>
+            <h3>You</h3>
+            <p>
+              A line you type may do everything Unix allows. Protected paths such as
+              <code>/etc</code>, <code>~/.ssh</code> and <code>.git</code> ask first. So does
+              a target that a model picked in your pipeline, as in
+              <code>ls | llm where "junk" | rm</code>.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card landing-role-person">
+          <div class="landing-card-body">
+            <div class="landing-role-name"><i class="file code outline icon"></i><code>script:&lt;path&gt;</code></div>
+            <h3>Your scripts</h3>
+            <p>
+              A script file you run has your rights. The journal records each of its actions
+              under the script's name, so you can see what it did and take it back.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card landing-role-model">
+          <div class="landing-card-body">
+            <div class="landing-role-name"><i class="comment alternate outline icon"></i><code>plan</code></div>
+            <h3>The assistant</h3>
+            <p>
+              <code>? request</code> has a model write a pipeline. You see it with an
+              explanation, and nothing runs before you say yes.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card landing-role-model">
+          <div class="landing-card-body">
+            <div class="landing-role-name"><i class="hand point right outline icon"></i><code>actor</code></div>
+            <h3>A model at work</h3>
+            <p>
+              In <code>ls | llm "delete ..."</code> the model may only filter the objects it
+              was handed and call their methods. You approve the rows, at most 50 per plan.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card landing-role-model">
+          <div class="landing-card-body">
+            <div class="landing-role-name"><i class="robot icon"></i><code>agent:&lt;name&gt;</code></div>
+            <h3>Coding agents</h3>
+            <p>
+              Claude Code and other agents work through <code>meersh mcp</code>. Each keeps
+              what it created across sessions and leases the files it edits. Whatever needs
+              you comes back unapplied.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <h3 class="landing-subhead">What each role may do</h3>
+      <div class="landing-rights-wrap">
+        <table class="landing-rights">
+          <thead>
+            <tr><th>Action</th><th>You and your scripts</th><th>Assistant, models and agents</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Create a new file in the project</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right allow">allow</span></td>
+            </tr>
+            <tr>
+              <td>Change, move or delete what it created itself</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right allow">allow</span></td>
+            </tr>
+            <tr>
+              <td>Change or delete any other file in the project</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right ask">ask</span><small>The old content goes to a snapshot or the trash.</small></td>
+            </tr>
+            <tr>
+              <td>Delete someone else's file for good, when neither the trash nor git can bring it back</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right deny">deny</span></td>
+            </tr>
+            <tr>
+              <td>Change or delete files outside the project</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right deny">deny</span></td>
+            </tr>
+            <tr>
+              <td>Touch a protected path. These are <code>/</code>, your home directory, <code>.git</code>, <code>~/.ssh</code> and the system directories.</td>
+              <td><span class="landing-right ask">ask</span></td>
+              <td><span class="landing-right deny">deny</span></td>
+            </tr>
+            <tr>
+              <td>Stop a process</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right allow">allow</span><small>If it started the process. Otherwise it asks.</small></td>
+            </tr>
+            <tr>
+              <td>Run an external program</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right ask">ask</span><small>The program runs in an overlay that shows its changes before they are kept.</small></td>
+            </tr>
+            <tr>
+              <td>Send data to a cloud model</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right ask">ask</span><small>A local model is allowed.</small></td>
+            </tr>
+            <tr>
+              <td>Change policies, undo actions or switch the model backend</td>
+              <td><span class="landing-right allow">allow</span></td>
+              <td><span class="landing-right deny">never</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="landing-term-caption">
+        These are the defaults. Rules such as <code>policy allow actor fs.delete owned</code>
+        change them, and only you can write rules. Everything a model does runs as a plan that
+        you approve as a whole, row by row or as a narrow rule. <code>policy explain</code>
+        shows which rule or default decides.
+      </p>
+
+      <div class="landing-term">
+        <div class="landing-term-bar"><span></span><span></span><span></span><em>meersh</em></div>
+<!-- capture:roles -->
+<pre><span class="prompt">〉</span><span class="cmd">[user plan actor agent:claude] | each { policy explain fs.delete dump.sql -p $it } | select principal decision because</span>
+╭───┬──────────────┬──────────┬─────────────────────────────────────────────────────────────╮
+│ # │ principal    │ decision │ because                                                     │
+├───┼──────────────┼──────────┼─────────────────────────────────────────────────────────────┤
+│ 0 │ user         │ allow    │                                                             │
+│ 1 │ plan         │ ask      │ not created by this session, can be restored from the trash │
+│ 2 │ actor        │ ask      │ not created by this session, can be restored from the trash │
+│ 3 │ agent:claude │ ask      │ not created by this session, can be restored from the trash │
+╰───┴──────────────┴──────────┴─────────────────────────────────────────────────────────────╯
+<span class="prompt">〉</span><span class="cmd">[README.md /etc/hostname] | each { policy explain fs.write $it -p agent:claude } | select target decision because</span>
+╭───┬───────────────┬──────────┬────────────────────────────────────────────────────────────────────╮
+│ # │ target        │ decision │ because                                                            │
+├───┼───────────────┼──────────┼────────────────────────────────────────────────────────────────────┤
+│ 0 │ README.md     │ ask      │ not created by this session, a snapshot of the old content is kept │
+│ 1 │ /etc/hostname │ deny     │ protected, a system directory (/etc)                               │
+╰───┴───────────────┴──────────┴────────────────────────────────────────────────────────────────────╯</pre>
+<!-- /capture:roles -->
       </div>
     </section>
 

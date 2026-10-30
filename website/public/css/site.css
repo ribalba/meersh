@@ -311,6 +311,78 @@ html, body {
   font-size: .92rem;
 }
 
+/* The roles. You and your scripts fill the first row, the three model roles the second,
+   in purple, so the two groups of the rights table below can be told apart. */
+.landing-roles {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1.5rem;
+  text-align: left;
+}
+.landing-role-person { grid-column: span 3; }
+.landing-role-model { grid-column: span 2; }
+.landing-role-name {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .75rem;
+  color: #2185d0;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+.landing-role-model .landing-role-name { color: #8250df; }
+.landing-role-name i.icon { margin: 0; }
+.landing-role-name code { color: #1f2328; font-size: .72rem; }
+.landing-roles p code { white-space: nowrap; }
+.landing-subhead {
+  margin: 3.5rem 0 1.25rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+/* What each role may do by default, as decided by the policy defaults. */
+.landing-rights-wrap { max-width: 900px; margin: 0 auto; overflow-x: auto; }
+.landing-rights {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: .95rem;
+}
+.landing-rights th {
+  padding: .6rem .9rem;
+  border-bottom: 2px solid #d0d7de;
+  color: #57606a;
+  font-size: .85rem;
+  font-weight: 600;
+}
+.landing-rights td {
+  padding: .7rem .9rem;
+  border-bottom: 1px solid #e6e8eb;
+  vertical-align: top;
+}
+.landing-rights th:not(:first-child), .landing-rights td:not(:first-child) { width: 27%; }
+.landing-rights th:last-child { color: #8250df; }
+.landing-rights small {
+  display: block;
+  margin-top: .3rem;
+  color: #6e7781;
+  font-size: .82rem;
+  line-height: 1.4;
+}
+.landing-right {
+  display: inline-block;
+  min-width: 3.6rem;
+  padding: .1rem .55rem;
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .78rem;
+  font-weight: 700;
+  text-align: center;
+}
+.landing-right.allow { background: #dafbe1; color: #116329; }
+.landing-right.ask { background: #fff8c5; color: #7d4e00; }
+.landing-right.deny { background: #ffebe9; color: #a40e26; }
+
 /* The agents block reuses the boxed section and needs its snippets left aligned. */
 .landing-login-section .landing-code { align-self: stretch; text-align: left; }
 
@@ -377,6 +449,10 @@ html, body {
 /* ---- Responsive ---- */
 @media (max-width: 820px) {
   .landing-grid { grid-template-columns: 1fr; }
+  .landing-roles { grid-template-columns: 1fr; }
+  .landing-role-person, .landing-role-model { grid-column: auto; }
+  .landing-rights { font-size: .88rem; }
+  .landing-rights th, .landing-rights td { padding: .55rem .5rem; }
   .landing-card-wide .landing-card-body { padding: 1.5rem; }
   .landing-card-wide-inner { flex-direction: column; align-items: stretch; gap: 1.5rem; }
   .landing-login-section { margin: 2.5rem 1.25rem 0; padding: 2.5rem 1.5rem; }
