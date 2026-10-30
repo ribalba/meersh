@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>The meersh meerkat, peeking over a terminal</title>
+  <g stroke="#241a12" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <!-- ears -->
+    <circle cx="128" cy="168" r="50" fill="#8b5a2b"/>
+    <circle cx="384" cy="168" r="50" fill="#8b5a2b"/>
+    <circle cx="132" cy="172" r="24" fill="#5e3b1c" stroke="none"/>
+    <circle cx="380" cy="172" r="24" fill="#5e3b1c" stroke="none"/>
+    <!-- head and tuft -->
+    <path d="M256 62 C 330 62 384 118 384 196 C 384 262 330 300 256 300 C 182 300 128 262 128 196 C 128 118 182 62 256 62 Z" fill="#f3c962"/>
+    <path d="M222 70 C 230 38 262 26 300 18 C 288 38 292 50 312 46 C 300 64 292 76 270 80 Z" fill="#f3c962"/>
+  </g>
+  <!-- face -->
+  <ellipse cx="256" cy="214" rx="92" ry="74" fill="#fbeccb"/>
+  <g stroke="#241a12" stroke-width="6">
+    <ellipse cx="205" cy="196" rx="40" ry="48" fill="#6b4226" transform="rotate(-18 205 196)"/>
+    <ellipse cx="307" cy="196" rx="40" ry="48" fill="#6b4226" transform="rotate(18 307 196)"/>
+    <circle cx="209" cy="200" r="26" fill="#fff"/>
+    <circle cx="303" cy="200" r="26" fill="#fff"/>
+  </g>
+  <circle cx="211" cy="203" r="17" fill="#2b1a10"/>
+  <circle cx="301" cy="203" r="17" fill="#2b1a10"/>
+  <circle cx="204" cy="196" r="6" fill="#fff"/>
+  <circle cx="294" cy="196" r="6" fill="#fff"/>
+  <path d="M188 150 q 18 -12 34 -2 M290 148 q 16 -10 34 2" fill="none" stroke="#241a12" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="256" cy="250" rx="20" ry="13" fill="#5a3a22" stroke="#241a12" stroke-width="5"/>
+  <!-- terminal window -->
+  <g stroke="#241a12" stroke-width="8" stroke-linejoin="round">
+    <rect x="66" y="276" width="380" height="216" rx="24" fill="#1e2430"/>
+    <path d="M90 276 H422 A24 24 0 0 1 446 300 V322 H66 V300 A24 24 0 0 1 90 276 Z" fill="#323a4b"/>
+  </g>
+  <circle cx="92" cy="299" r="8" fill="#ff5f57"/>
+  <circle cx="114" cy="299" r="8" fill="#febc2e"/>
+  <circle cx="136" cy="299" r="8" fill="#28c840"/>
+  <!-- prompt: a chevron and a cursor, drawn as paths so no font is needed -->
+  <path d="M104 362 L146 392 L104 422" fill="none" stroke="#3fb950" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="170" y="408" width="56" height="16" rx="4" fill="#e6edf3"/>
+  <rect x="250" y="360" width="150" height="12" rx="6" fill="#58a6ff" opacity=".85"/>
+  <rect x="250" y="386" width="110" height="12" rx="6" fill="#d2a8ff" opacity=".85"/>
+  <rect x="250" y="412" width="132" height="12" rx="6" fill="#7ee787" opacity=".85"/>
+  <!-- paws over the edge -->
+  <g stroke="#241a12" stroke-width="7" stroke-linejoin="round">
+    <path d="M150 284 C 150 258 214 258 214 284 C 214 300 150 300 150 284 Z" fill="#8b5a2b"/>
+    <path d="M298 284 C 298 258 362 258 362 284 C 362 300 298 300 298 284 Z" fill="#8b5a2b"/>
+  </g>
+  <path d="M170 276 v14 M184 274 v16 M198 276 v14 M318 276 v14 M332 274 v16 M346 276 v14" stroke="#241a12" stroke-width="4" stroke-linecap="round"/>
+</svg>

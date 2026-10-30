@@ -1,0 +1,30 @@
+# meersh policy for coding agents such as Claude Code.
+# Copy this to ~/.config/meersh/init.msh, or source it from there with `source <path>`.
+# Rules are checked in order, the first match decides, and protected paths come first.
+# `policy` lists them and `policy explain <cap> <target> --principal agent:claude` shows
+# how a request would be decided.
+
+# Programs an agent may run without asking. They run directly, and Landlock confines them
+# to writing inside the project and the temp directory. Everything else asks the user.
+policy allow agent:* exec $it.program in [rg grep ls cat head tail wc diff sort uniq jq tree file stat cargo rustc rustfmt]
+
+# git, but only subcommands that neither commit nor push nor rewrite history.
+policy allow agent:* exec $it.program == git and ($it.args | first) in [status diff log show branch blame rev-parse ls-files grep]
+
+# Desktop notifications, which my CLAUDE.md asks for at the end of every job.
+policy allow agent:* exec $it.program == notify-send
+
+# Interpreters and build tools run arbitrary code. Landlock limits where they write, but
+# they can still read your files and use the network. Allow them only where you trust the project.
+# policy allow agent:* exec $it.program in [python3 pytest node npm npx make go]
+
+# Agents may edit and overwrite files inside the project. Every edit keeps a snapshot of the
+# old content, so `undo` in meersh restores it. Without this rule every edit asks.
+policy allow agent:* fs.write in_project
+
+# The defaults stay in force for everything else. An agent may create files in the project
+# and change or delete what it created itself. Moving, deleting and chmod of other files,
+# signals to other processes and data for cloud models need the user.
+
+# At most 30 actions per plan for any model.
+policy budget model 30

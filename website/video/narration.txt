@@ -1,0 +1,78 @@
+# The narration of the tour video, one scene per [section] and one sentence per line.
+#
+# make_video.py speaks every sentence on its own, so the subtitles and the cuts follow
+# the sentences. The section names are the scene ids of make_video.py, and the number
+# of sentences must match what the shots of a scene speak. A line "shown | spoken"
+# shows the first part as the subtitle and speaks the second.
+#
+# Voice: Kokoro v1.0 (82M, Apache 2.0) through kokoro-onnx, voice af_heart at speed
+# 0.95 (kokoro_say.py), the same voice as the meertex and meerora videos.
+#
+# Pronunciation. Kokoro speaks the words of [pronounce] as the phonemes given there
+# (espeak style IPA, en-us) and the rest of a sentence through espeak-ng.
+#
+#   Written      Said as             Phonemes        Why
+#   meersh       meer-ess-AITCH      mˌɪɹɛsˈeɪtʃ     meer, then the letters of the old sh, in one
+#                                                    flow with the stress on the H
+#   a meersh     uh meer-ess-AITCH   ɐ mˌɪɹɛsˈeɪtʃ   "a" before a lexicon word came out as the letter A
+#   Meerverse    MEER-verse          mˈɪɹvɜːs        as in the meertex and meerora videos
+#
+# Commands that read badly, such as ls or systemctl, are spoken in another form.
+
+[pronounce]
+meersh = mˌɪɹɛsˈeɪtʃ
+a meersh = ɐ mˌɪɹɛsˈeɪtʃ
+Meerverse = mˈɪɹvɜːs
+
+[intro]
+This is meersh, a shell for Linux in which commands pass objects instead of text.
+ls returns records, and every column has a type, such as a size or a date. | L S returns records, and every column has a type, such as a size or a date.
+
+[objects]
+So filters work on the columns, and there is nothing to parse.
+Sizes and dates compare as values, not as strings.
+
+[methods]
+Every object knows what it is and what it can do.
+A file can hash itself, and a process stops when you call kill on the object you hold.
+
+[legacy]
+Other programs still run, with a caret in front.
+Adapters turn the text of git, ip or systemctl into records, so the same filters work. | Adapters turn the text of git, I P or system control into records, so the same filters work.
+
+[ask]
+Start a line with a question mark and ask for what you want in plain words.
+The assistant answers with a meersh pipeline, not with bash.
+It sees your request and the types, never your data.
+Nothing runs until you say yes.
+
+[actor]
+A model can also act on the objects in a pipeline.
+It sees only their type and writes a pipeline, so a file name cannot talk it into anything.
+meersh shows every action with its reason, and nothing happens until you approve.
+
+[undo]
+Deleted files go to the trash, and the journal records every action with its author.
+Pipe the model's actions into undo, and they are taken back.
+
+[roles]
+meersh brings a new security model to the shell.
+Unix asks which user runs a program, and meersh also asks who wrote the command.
+You, your scripts, the assistant, a model and a coding agent each have a role with rights of its own.
+
+[ownership]
+Rights follow ownership.
+A model may delete what this session created, it has to ask for your other files, and system paths stay closed to it.
+
+[confine]
+The kernel holds other programs to the same idea.
+In a with block, Landlock lets a program write only where you allow it, and everything else is refused.
+
+[agents]
+Coding agents such as Claude Code can use meersh instead of bash, through MCP. | Coding agents such as Claude Code can use meersh instead of bash, through M C P.
+The same rules hold for them, and the ledger shows what they left behind.
+
+[ending]
+meersh. A shell for the 21st century. | meersh. A shell for the twenty-first century.
+meersh is part of the Meerverse.
+Free and open source, on GitHub.

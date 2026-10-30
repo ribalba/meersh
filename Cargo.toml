@@ -1,0 +1,41 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/ribalba/meersh"
+
+[workspace.dependencies]
+meersh-value = { path = "crates/meersh-value" }
+meersh-parser = { path = "crates/meersh-parser" }
+meersh-engine = { path = "crates/meersh-engine" }
+meersh-cmds = { path = "crates/meersh-cmds" }
+meersh-coreutils = { path = "crates/meersh-coreutils" }
+meersh-llm = { path = "crates/meersh-llm" }
+meersh-plugin = { path = "crates/meersh-plugin" }
+meersh-sysutils = { path = "crates/meersh-sysutils" }
+meersh-adapters = { path = "crates/meersh-adapters" }
+meersh-mcp = { path = "crates/meersh-mcp" }
+
+chrono = "0.4.45"
+ctrlc = "3.5.2"
+dirs = "7.0.0"
+glob = "0.3.4"
+indexmap = "2.14.2"
+landlock = "0.4.7"
+libc = "0.2"
+nix = { version = "0.31.3", features = ["user", "signal", "process", "fs", "mount", "sched", "poll"] }
+reedline = "0.52.1"
+regex = "1.13.1"
+serde = { version = "1", features = ["derive"] }
+sha2 = "0.11.1"
+serde_json = { version = "1", features = ["preserve_order"] }
+sysinfo = "0.40.0"
+terminal_size = "0.4.4"
+thiserror = "2.0.21"
+toml = "1.1.8"
+trash = "5.2.9"
+ureq = { version = "3.5.0", features = ["json"] }

@@ -1,0 +1,8 @@
+# Local preview. 8080 is meerail's website and 8081 meercal's, so all of them can run at once.
+services:
+  website:
+    build: .
+    image: meersh-website
+    ports:
+      - "${WEBSITE_PORT:-8085}:80"
+    restart: unless-stopped

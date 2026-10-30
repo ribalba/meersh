@@ -1,0 +1,105 @@
+# Builds static Linux binaries for a tag such as v0.1.0 and publishes them as a GitHub
+# release. The release holds a tarball, a .deb and an .rpm for x86_64 and ARM64, install.sh
+# and SHA256SUMS. Started by hand, the workflow only builds and keeps the files as workflow
+# artifacts, which is a dry run for the next tag.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build ${{ matrix.target }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            runner: ubuntu-24.04
+            nfpm: x86_64
+            nfpm_sha256: 6d7f9a28b2f397934403950fcbba83f598b08d02edbe79a0815b3b4897341750
+          - target: aarch64-unknown-linux-musl
+            runner: ubuntu-24.04-arm
+            nfpm: arm64
+            nfpm_sha256: a9a75213763783b7669719e505474c748c5ad7dc66591a195619deb50f85c2f4
+    runs-on: ${{ matrix.runner }}
+    env:
+      NFPM_VERSION: 2.48.0
+    steps:
+      - uses: actions/checkout@v7
+
+      # `meersh --version` reports the version in Cargo.toml, so the tag has to match it.
+      - name: Check the tag
+        if: github.ref_type == 'tag'
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match version $version in Cargo.toml"
+            exit 1
+          fi
+
+      - name: Install musl and nfpm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          archive=nfpm_${NFPM_VERSION}_Linux_${{ matrix.nfpm }}.tar.gz
+          curl -fsSL -o "$RUNNER_TEMP/$archive" "https://github.com/goreleaser/nfpm/releases/download/v$NFPM_VERSION/$archive"
+          echo "${{ matrix.nfpm_sha256 }}  $RUNNER_TEMP/$archive" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin"
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/bin" nfpm
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build and package
+        run: packaging/dist.sh ${{ matrix.target }}
+
+      - name: Smoke test
+        run: |
+          bin=target/${{ matrix.target }}/release
+          $bin/meersh --version
+          $bin/meersh -c 'ls | first 3'
+          $bin/meer-box ls
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: meersh-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cp packaging/install.sh dist/
+          cd dist
+          sha256sum -- * > SHA256SUMS
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "meersh $GITHUB_REF_NAME"
+          fi
+          gh release upload "$GITHUB_REF_NAME" --clobber *

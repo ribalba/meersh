@@ -1,0 +1,40 @@
+# meersh
+
+> A shell for the 21st century. meersh is an object oriented shell for Linux, written in Rust. Commands pass typed records instead of text, language models are pipeline stages, and every action of a model is checked against ownership and the user's policy, planned before it runs and can be undone.
+
+Source: https://github.com/ribalba/meersh (AGPL-3.0)
+
+Tour: /video/meersh-tour.mp4, a narrated three-minute video of the real shell in a made-up project, with burned-in subtitles. It shows typed records, methods on objects, adapters, the `?` shorthand, a model that plans a deletion for approval, undo through the journal, the permission model with its roles and ownership, Landlock confining a program in a `with` block, and coding agents over MCP.
+
+## What it is
+
+- Pipelines pass typed values. `ls` returns `fs.entry` records (name, type, size, modified), `ps` returns `proc` records. Filters such as `where size > 10mb` work on columns, not text.
+- Records carry a type tag and an identity. Methods are commands named `<type>.<method>`, called as `$f.delete()`, `$f.hash()`, `$p.kill()` or `$p.ports()`. `help <type>` lists fields and methods.
+- External programs need a `^` prefix, for example `^git log`. Adapters turn the output of `ip`, `ss`, `systemctl`, `journalctl`, `git`, `lsblk`, `findmnt`, `docker`, `podman`, `who`, `free`, `uptime` and `df` into records when a builtin reads it.
+- Language model commands are `llm`, `llm map`, `llm where`, `llm parse`, `llm rank`, `llm group`, `llm join`, `llm embed`, `llm search`, `llm edit` and `llm agent`. `? <request>` writes a pipeline from plain language. Backends are Ollama (default), any OpenAI compatible server, and Claude Code.
+
+## Authority
+
+- Every pipeline runs under a principal: user, script, plan (written by `?`), actor (a model acting on piped objects) or agent:<name>.
+- Commands ask for a capability with the concrete target right before they act (fs.create, fs.write, fs.delete, fs.move, fs.chmod, proc.spawn, proc.signal, exec, llm.send).
+- A shared ledger records what each session and agent created. A model may change or delete what it created itself. Everything else needs the user or a policy rule. Protected paths (/, the home directory, .git, ~/.ssh and system directories) are never available to models.
+- Statements that write, delete or call a model are planned first. The user approves all rows, some rows, or a narrow rule. Every action is journaled with its inverse, and `undo` reverses it.
+- `sandbox { ... }` runs programs in an overlay and shows their changes. `with {fs.write: ./out, net: none} { ... }` confines programs with Landlock.
+
+## For coding agents
+
+- `meersh mcp --agent <name> [--unique]` serves meersh over MCP on stdio. Tools are `run`, `plan`, `help`, `ledger`, `journal`, `lease`, `release`, `read_file`, `write_file`, `edit_file`, and typed `cmd_*` tools for commands that only read.
+- A result with `applied: false` means nothing changed. The plan lists the actions that need the user. Report them instead of trying another way.
+- Agents cannot change policies, aliases, definitions or the environment.
+- [Setup for Claude Code](https://github.com/ribalba/meersh/tree/main/integrations/claude)
+
+## Install
+
+- `curl -fsSL https://github.com/ribalba/meersh/releases/latest/download/install.sh | sh` installs the static build for x86_64 or ARM64 to ~/.local/bin, or to /usr/local/bin as root.
+- The [releases](https://github.com/ribalba/meersh/releases) hold meersh-amd64.deb, meersh-arm64.deb, meersh-x86_64.rpm, meersh-aarch64.rpm and tarballs.
+- From source: `make install PREFIX=~/.local` in a clone of the repository.
+
+## Docs
+
+- [Concept](https://github.com/ribalba/meersh/blob/main/CONCEPT.md)
+- [Authority](https://github.com/ribalba/meersh/blob/main/AUTHORITY.md)

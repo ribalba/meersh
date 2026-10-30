@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <text x="580" y="240" font-family="Segoe UI, Noto Sans, Helvetica, Arial, sans-serif" font-size="92" font-weight="800" fill="#1f2328">meersh</text>
+  <text x="582" y="322" font-family="Segoe UI, Noto Sans, Helvetica, Arial, sans-serif" font-size="44" fill="#57606a">A shell for the</text>
+  <text x="582" y="380" font-family="Segoe UI, Noto Sans, Helvetica, Arial, sans-serif" font-size="44" fill="#57606a">21st century.</text>
+  <text x="582" y="470" font-family="IBM Plex Mono, DejaVu Sans Mono, monospace" font-size="28" fill="#2185d0">ls | llm "delete files over 5mb"</text>
+</svg>

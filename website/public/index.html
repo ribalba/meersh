@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>meersh, a shell for the 21st century</title>
+  <meta name="description" content="meersh is an object oriented shell for Linux, written in Rust. Commands pass typed records instead of text, language models are pipeline stages, and every action of a model is checked against ownership and your policy, planned before it runs and can be undone." />
+  <meta name="theme-color" content="#2185d0" />
+  <meta property="og:title" content="meersh, the meerkat shell" />
+  <meta property="og:description" content="A shell for the 21st century. Commands pass objects instead of text, and language models may act, but only on what you allow." />
+  <meta property="og:image" content="/img/og.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/img/favicon-64.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/img/favicon-180.png" />
+
+  <!-- Heavy stylesheet loaded non-render-blocking, as on the meerail and meercal sites. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.css" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="/css/site.css" />
+  <noscript>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.3/dist/semantic.min.css" />
+  </noscript>
+</head>
+<body>
+  <div class="landing">
+
+    <!-- Top bar -->
+    <header class="landing-nav" id="top">
+      <div class="landing-nav-inner">
+        <a class="landing-brand" href="/">
+          <img src="/img/logo-square.png" alt="" />
+          <span>meersh</span>
+        </a>
+        <nav class="landing-nav-links">
+          <a href="#tour">Tour</a>
+          <a href="#objects">Objects</a>
+          <a href="#models">Models</a>
+          <a href="#authority">Authority</a>
+          <a href="#agents">Agents</a>
+          <a href="#start">Get started</a>
+          <a class="ui small primary button" href="https://github.com/ribalba/meersh" target="_blank" rel="noopener">
+            <i class="github icon"></i> GitHub
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="landing-hero">
+      <img src="/img/logo.png" width="640" height="700" alt="The meersh meerkat, holding a terminal" class="landing-logo" />
+      <div class="landing-hero-copy">
+        <h1 class="landing-title">A shell for the 21st&nbsp;century.</h1>
+        <p class="landing-subtitle">
+          Unix pipes move text, and every pipeline hides a small parser that breaks
+          silently. meersh passes typed records instead, makes language models ordinary
+          pipeline stages, and checks every action against who wrote it, what it touches
+          and whether it can be undone. Written in Rust, for Linux, local models first.
+        </p>
+        <div class="landing-hero-actions">
+          <a class="ui primary button" href="#start"><i class="rocket icon"></i> Get started</a>
+          <a class="ui basic button" href="#tour" data-play><i class="play icon"></i> Watch the tour</a>
+          <a class="ui basic button" href="#models"><i class="terminal icon"></i> See it act</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tour. website/video/ films it and builds these files. Browsers that play AV1
+         take the WebM, the others the MP4. -->
+    <section id="tour" class="landing-features">
+      <h2 class="landing-section-title">meersh in three minutes</h2>
+      <p class="landing-section-lede">
+        A narrated tour of the real shell in a made-up project. Watch records flow through
+        pipes, a question mark turn plain words into a pipeline, and a model plan a
+        deletion that waits for your approval and can be undone. Then see the permission
+        model decide what you, a model and a coding agent may do, and the kernel hold a
+        program to the folder you allowed.
+      </p>
+      <figure class="landing-player">
+        <video id="tour-video" controls preload="none" playsinline width="1920" height="1080"
+               poster="/video/meersh-tour-poster.webp?v=84370c10be">
+          <source src="/video/meersh-tour.webm?v=33878e5842" type='video/webm; codecs="av01.0.08M.10, opus"' />
+          <source src="/video/meersh-tour.mp4?v=c16938119e" type="video/mp4" />
+          <p>Your browser cannot play the video here. <a href="/video/meersh-tour.mp4?v=c16938119e">Download the tour as MP4.</a></p>
+        </video>
+        <button class="landing-play" type="button" hidden>
+          <span class="landing-play-pill">
+            <span class="landing-play-disc" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+            </span>
+            <span class="landing-play-text">
+              <span class="landing-play-title">Watch the tour</span>
+              <span class="landing-play-meta">3 minutes · sound on · subtitles</span>
+            </span>
+          </span>
+        </button>
+      </figure>
+    </section>
+
+    <!-- Objects -->
+    <section id="objects" class="landing-features">
+      <h2 class="landing-section-title">Objects, not text</h2>
+      <p class="landing-section-lede">
+        PowerShell showed that a shell can pass objects. meersh does it on Linux, with
+        plain data that survives a pipe, a file or a language model.
+      </p>
+
+      <div class="landing-grid">
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="table icon"></i></div>
+            <h3>Typed records</h3>
+            <p>
+              <code>ls</code> returns <code>fs.entry</code> records with a filesize and a
+              date, <code>ps</code> returns <code>proc</code> records. <code>where size &gt; 10mb</code>
+              needs no parsing, and <code>ps | where cpu &gt; 50 | kill</code> needs no <code>xargs</code>.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="cubes icon"></i></div>
+            <h3>Objects with methods</h3>
+            <p>
+              <code>$f.delete()</code>, <code>$f.hash()</code>, <code>$p.ports()</code>. Every
+              object carries its identity, so a stale listing can never hit a different file
+              or a reused pid. <code>help fs.entry</code> lists fields and methods.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="exchange icon"></i></div>
+            <h3>Legacy tools become records</h3>
+            <p>
+              Adapters turn <code>ip</code>, <code>ss</code>, <code>systemctl</code>,
+              <code>journalctl</code>, <code>git</code> and more into tables when a builtin reads
+              them. Rust tools can send real objects across the process boundary.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="landing-term">
+        <div class="landing-term-bar"><span></span><span></span><span></span><em>meersh</em></div>
+<!-- capture:objects -->
+<pre><span class="prompt">〉</span><span class="cmd">ls | where size &gt; 1kb | sort-by size -r</span>
+╭───┬───────────────┬──────┬─────────┬─────────────────────╮
+│ # │ name          │ type │ size    │ modified            │
+├───┼───────────────┼──────┼─────────┼─────────────────────┤
+│ 0 │ build-old.bin │ file │ 6.7 MiB │ 2026-10-29 23:00:00 │
+│ 1 │ dump.sql      │ file │ 2.0 MiB │ 2026-10-29 23:00:00 │
+│ 2 │ README.md     │ file │ 1.2 KiB │ 2026-10-29 23:00:00 │
+╰───┴───────────────┴──────┴─────────┴─────────────────────╯</pre>
+<!-- /capture:objects -->
+      </div>
+    </section>
+
+    <!-- Models -->
+    <section id="models" class="landing-features">
+      <h2 class="landing-section-title">Language models as pipeline stages</h2>
+      <p class="landing-section-lede">
+        A model can write a pipeline, work on data, or act on objects. It never gets more
+        than the role needs, and local models through Ollama are the default.
+      </p>
+
+      <div class="landing-grid">
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="filter icon"></i></div>
+            <h3>Transform data</h3>
+            <p>
+              <code>llm map</code>, <code>llm where</code>, <code>llm parse</code>,
+              <code>llm rank</code>, <code>llm group</code> and <code>llm join</code> take a meersh
+              type, turn it into a JSON Schema and return typed values. Rows go in batches,
+              answers are cached, and unsure rows can cascade to a stronger model.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="hand point right icon"></i></div>
+            <h3>Act on objects</h3>
+            <p>
+              <code>ls | llm "delete all files larger than 5mb"</code> shows the model only
+              the type and its methods, never the files. It writes a pipeline over the input,
+              meersh checks that it can only touch what was piped in, and plans it.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="comment alternate outline icon"></i></div>
+            <h3>Write pipelines</h3>
+            <p>
+              <code>? the three biggest files here</code> turns a request into a pipeline. The
+              planner sees the request and the types, not the data, so text inside your files
+              cannot steer it. This follows the CaMeL design against prompt injection.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="landing-term">
+        <div class="landing-term-bar"><span></span><span></span><span></span><em>meersh, with qwen3:4b on Ollama</em></div>
+<!-- capture:actor -->
+<pre><span class="prompt">〉</span><span class="cmd">ls | llm &quot;delete all files that are larger than 5mb&quot;</span>
+
+  where size &gt; 5mb and type == file | each { $it.delete() }
+  # actor wrote this. The instruction asks to delete all files larger than 5mb. The pipeline first filters the table for rows where the size is greater than 5mb and the type is a file. Then, it applies the delete operation to each matching file.
+
+╭───┬───────────┬────────┬───────────────┬────────┬─────────┬────────────┬──────────┬──────────────────╮
+│ # │ principal │ action │ target        │ detail │ size    │ reversible │ decision │ because          │
+├───┼───────────┼────────┼───────────────┼────────┼─────────┼────────────┼──────────┼──────────────────┤
+│ 0 │ actor     │ trash  │ build-old.bin │        │ 6.7 MiB │ true       │ ask      │ not created by … │
+╰───┴───────────┴────────┴───────────────┴────────┴─────────┴────────────┴──────────┴──────────────────╯
+  1 actions, 6.7 MiB, all reversible. 1 need your approval, 0 refused.
+  not applied. Run interactively, or add --approve or --approve-only &lt;rows&gt;.
+error: nothing was changed</pre>
+<!-- /capture:actor -->
+      </div>
+      <p class="landing-term-caption">
+        A real run with <code>meersh -c</code>. The model saw <code>table&lt;fs.entry&gt;</code>
+        and its methods, nothing else. Without a terminal to ask, meersh applies nothing. In the
+        shell the same plan waits for your answer, for all rows or only some.
+      </p>
+    </section>
+
+    <!-- Authority -->
+    <section id="authority" class="landing-features">
+      <h2 class="landing-section-title">Every action has an author, a target and a right</h2>
+      <p class="landing-section-lede">
+        <code>rm out/demo.o</code> right after creating it is harmless.
+        <code>rm ~/thesis.tex</code> is a disaster. The danger is in the target and in who
+        decided, so that is what meersh checks.
+      </p>
+
+      <div class="landing-grid">
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="user check icon"></i></div>
+            <h3>Remove what you created</h3>
+            <p>
+              A ledger records what every session and agent created. A model may change or
+              delete what it created itself and nothing else. Ownership lapses as soon as
+              someone else edits the file.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="undo icon"></i></div>
+            <h3>Plan first, undo later</h3>
+            <p>
+              Anything that writes, deletes or calls a model is planned before it runs. You
+              approve all of it, some rows, or a narrow rule. Every action is journaled with
+              its inverse, and <code>undo</code> takes it back.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="shield alternate icon"></i></div>
+            <h3>Sandboxes and Landlock</h3>
+            <p>
+              <code>sandbox { ^npm install }</code> runs a program in an overlay and shows
+              what it would change. <code>with {fs.write: ./out, net: none} { ^make }</code>
+              lets the kernel enforce the limits.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="landing-term">
+        <div class="landing-term-bar"><span></span><span></span><span></span><em>meersh</em></div>
+<!-- capture:authority -->
+<pre><span class="prompt">〉</span><span class="cmd">policy explain fs.delete dump.sql --principal actor | select principal decision because</span>
+&lt;policy.decision&gt;
+principal  actor
+ decision  ask
+  because  not created by this session, can be restored from the trash
+<span class="prompt">〉</span><span class="cmd">touch draft.txt; rm draft.txt; undo | select action target result</span>
+╭───┬───────────┬─────────╮
+│ # │ path      │ action  │
+├───┼───────────┼─────────┤
+│ 0 │ draft.txt │ created │
+╰───┴───────────┴─────────╯
+╭───┬───────────┬─────────┬──────╮
+│ # │ path      │ action  │ size │
+├───┼───────────┼─────────┼──────┤
+│ 0 │ draft.txt │ trashed │  0 B │
+╰───┴───────────┴─────────┴──────╯
+╭───┬────────┬───────────┬─────────────────────────╮
+│ # │ action │ target    │ result                  │
+├───┼────────┼───────────┼─────────────────────────┤
+│ 0 │ trash  │ draft.txt │ restored from the trash │
+╰───┴────────┴───────────┴─────────────────────────╯</pre>
+<!-- /capture:authority -->
+      </div>
+    </section>
+
+    <!-- Agents -->
+    <section id="agents" class="landing-login-section">
+      <h2 class="landing-login-title">The shell for your coding agents</h2>
+      <p class="landing-login-lede">
+        <code>meersh mcp</code> gives Claude Code and other agents typed tools instead of a bash
+        prompt. Each agent is its own principal with its own ledger and leases, so several
+        agents in one project cannot delete each other's work. Programs your policy allows
+        run under Landlock, confined to the project. Everything else comes back to the agent
+        as a plan for you to approve.
+      </p>
+      <pre class="landing-code">claude mcp add --scope user meersh -- ~/.local/bin/meersh mcp --agent claude --unique</pre>
+      <p class="landing-login-lede" style="margin-top:1.25rem;margin-bottom:0">
+        The repository has the CLAUDE.md section, the Claude Code permissions and the policy
+        that make an agent use meersh instead of bash, in
+        <a href="https://github.com/ribalba/meersh/tree/main/integrations/claude" target="_blank" rel="noopener">integrations/claude</a>.
+      </p>
+    </section>
+
+    <!-- Get started -->
+    <section id="start" class="landing-features">
+      <h2 class="landing-section-title">Get started</h2>
+      <p class="landing-section-lede">
+        One command installs meersh on any Linux. For the model features, a local
+        <strong>Ollama</strong> or a logged in <strong>Claude Code</strong> is enough.
+      </p>
+
+      <div class="landing-grid">
+        <article class="landing-card landing-card-wide">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="download icon"></i></div>
+            <h3>1. Install</h3>
+            <p>
+              One binary for the shell and one multi call binary for the tools, so they serve
+              bash users with text too. Both are linked statically and run on every distribution
+              on x86_64 and ARM64. The script puts them in <code>~/.local/bin</code>, or in
+              <code>/usr/local/bin</code> as root. Running it again updates meersh.
+            </p>
+            <pre class="landing-code">curl -fsSL https://github.com/ribalba/meersh/releases/latest/download/install.sh | sh</pre>
+            <table class="landing-downloads">
+              <tr>
+                <th>Debian, Ubuntu</th>
+                <td><a href="https://github.com/ribalba/meersh/releases/latest/download/meersh-amd64.deb">.deb x86_64</a></td>
+                <td><a href="https://github.com/ribalba/meersh/releases/latest/download/meersh-arm64.deb">.deb ARM64</a></td>
+              </tr>
+              <tr>
+                <th>Fedora, openSUSE</th>
+                <td><a href="https://github.com/ribalba/meersh/releases/latest/download/meersh-x86_64.rpm">.rpm x86_64</a></td>
+                <td><a href="https://github.com/ribalba/meersh/releases/latest/download/meersh-aarch64.rpm">.rpm ARM64</a></td>
+              </tr>
+              <tr>
+                <th>Any Linux</th>
+                <td><a href="https://github.com/ribalba/meersh/releases/latest/download/meersh-x86_64-unknown-linux-musl.tar.gz">.tar.gz x86_64</a></td>
+                <td><a href="https://github.com/ribalba/meersh/releases/latest/download/meersh-aarch64-unknown-linux-musl.tar.gz">.tar.gz ARM64</a></td>
+              </tr>
+            </table>
+            <p class="landing-downloads-note">
+              Every version and the checksums are on the
+              <a href="https://github.com/ribalba/meersh/releases" target="_blank" rel="noopener">releases page</a>.
+              To build from source you need a Rust toolchain. Run <code>make install PREFIX=~/.local</code>
+              in a clone of the repository.
+            </p>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="microchip icon"></i></div>
+            <h3>2. Pick your models</h3>
+            <p>
+              Without a config meersh uses Ollama on this machine. Claude Code and any OpenAI
+              compatible server are one section of <code>config.toml</code> each. The installer
+              puts an example in <code>~/.local/share/doc/meersh</code>, the packages in
+              <code>/usr/share/doc/meersh</code>.
+            </p>
+            <pre class="landing-code">cd ~/.local/share/doc/meersh
+cp config.example.toml \
+  ~/.config/meersh/config.toml
+llm backends</pre>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="play icon"></i></div>
+            <h3>3. Try it</h3>
+            <p>
+              Tab completes commands, flags and the columns of the data flowing in.
+              <code>help</code> is a table like everything else.
+            </p>
+            <pre class="landing-code">meersh
+ps | sort-by cpu -r | first 5
+help | where effect == destructive</pre>
+          </div>
+        </article>
+
+        <article class="landing-card">
+          <div class="landing-card-body">
+            <div class="landing-card-icon"><i class="book icon"></i></div>
+            <h3>4. Read the design</h3>
+            <p>
+              <code>CONCEPT.md</code> explains the object model and what meersh takes from
+              Nushell, PowerShell and uutils. <code>AUTHORITY.md</code> explains principals,
+              ownership, plans and models that act on objects.
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer class="landing-footer">
+      <p>
+        <strong>meersh</strong> is the meerkat shell, a sibling of the
+        <a href="https://meerail.com" target="_blank" rel="noopener">meerail</a> mail client, the
+        <a href="https://meercal.com" target="_blank" rel="noopener">meercal</a> calendar and the
+        <a href="https://meerato.com" target="_blank" rel="noopener">meerato</a> todo tool.
+      </p>
+      <p>
+        <a href="https://github.com/ribalba/meersh" target="_blank" rel="noopener">
+          <i class="github icon"></i>Open source, AGPL-3.0
+        </a>
+      </p>
+    </footer>
+
+  </div>
+  <script>
+    // The big play button over the tour. Without JavaScript the video keeps its own
+    // controls. A link with data-play scrolls to the video and plays it.
+    (function () {
+      var video = document.getElementById("tour-video");
+      var play = document.querySelector(".landing-player .landing-play");
+      if (!video || !play) return;
+      var start = function () {
+        play.hidden = true;
+        video.controls = true;
+        var playing = video.play();
+        if (playing && playing.catch) playing.catch(function () {});
+      };
+      video.controls = false;
+      play.hidden = false;
+      play.addEventListener("click", start);
+      video.addEventListener("play", function () {
+        play.hidden = true;
+        video.controls = true;
+      });
+      document.querySelectorAll("[data-play]").forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          var smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          video.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
+          start();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

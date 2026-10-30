@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>meersh</title>
+  <!-- The stage of the tour video. stage.py serves this page, xterm.js from node_modules
+       and the output of meersh in a pseudo terminal as server-sent events. The backdrop
+       and the window frame are drawn here, in the colours of the website's terminal
+       windows. The rest is xterm.js. -->
+  <link rel="stylesheet" href="/xterm.css" />
+  <style>
+    :root {
+      --term-bg: #1e2430;
+      --term-bar: #323a4b;
+      --term-title: #aeb7c4;
+    }
+    html, body { margin: 0; height: 100%; overflow: hidden; }
+    body {
+      background: radial-gradient(120% 90% at 50% 0%, #f1f8ff 0%, #ffffff 62%, #f6f8fa 100%);
+      font-family: "Noto Sans", sans-serif;
+    }
+    /* The camera does not move, so the window is large and leaves only the band at the
+       bottom free for the subtitles. */
+    .window {
+      position: absolute;
+      left: 68px;
+      top: 20px;
+      width: 1400px;
+      height: 736px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #1b2230;
+      border-radius: 14px;
+      background: var(--term-bg);
+      box-shadow: 0 28px 70px rgba(27, 31, 36, .26), 0 6px 18px rgba(27, 31, 36, .12);
+      overflow: hidden;
+    }
+    .bar {
+      flex: none;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 15px;
+      background: var(--term-bar);
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .title {
+      flex: 1;
+      margin-right: 52px;
+      text-align: center;
+      color: var(--term-title);
+      font: 500 14px "Noto Sans Mono", monospace;
+      white-space: nowrap;
+    }
+    #term { flex: 1; min-height: 0; padding: 14px 10px 10px 18px; }
+    .xterm .xterm-viewport { overflow: hidden !important; }
+  </style>
+</head>
+<body>
+  <div class="window">
+    <div class="bar">
+      <span class="dot" style="background:#ff5f57"></span>
+      <span class="dot" style="background:#febc2e"></span>
+      <span class="dot" style="background:#28c840"></span>
+      <span class="title" id="title">meersh</span>
+    </div>
+    <div id="term"></div>
+  </div>
+  <script src="/xterm.js"></script>
+  <script src="/addon-webgl.js"></script>
+  <script>
+    // GitHub's dark palette, the colours of the terminal windows on the website.
+    const term = new Terminal({
+      fontFamily: '"Noto Sans Mono", "DejaVu Sans Mono", monospace',
+      fontSize: 19,
+      lineHeight: 1.0,
+      cursorBlink: false,
+      cursorStyle: "block",
+      scrollback: 0,
+      allowProposedApi: true,
+      theme: {
+        background: "#1e2430",
+        foreground: "#e6edf3",
+        cursor: "#e6edf3",
+        cursorAccent: "#1e2430",
+        selectionBackground: "#58a6ff4d",
+        black: "#484f58", red: "#ff7b72", green: "#3fb950", yellow: "#d29922",
+        blue: "#58a6ff", magenta: "#bc8cff", cyan: "#39c5cf", white: "#b1bac4",
+        brightBlack: "#6e7681", brightRed: "#ffa198", brightGreen: "#56d364", brightYellow: "#e3b341",
+        brightBlue: "#79c0ff", brightMagenta: "#d2a8ff", brightCyan: "#56d4dd", brightWhite: "#ffffff",
+      },
+    });
+    const host = document.getElementById("term");
+    term.open(host);
+    // The WebGL renderer draws box drawing characters itself, so the frames of meersh
+    // tables join without gaps at any line height.
+    term.loadAddon(new WebglAddon.WebglAddon());
+
+    // meersh's line editor asks the terminal where the cursor is. xterm.js answers, and
+    // the answer goes back into the pseudo terminal.
+    const send = (data) => fetch("/input", { method: "POST", body: data });
+    term.onData(send);
+    term.onBinary(send);
+
+    // Fit the grid to the window. stage.py reads window.termSize and gives the pseudo
+    // terminal the same size before meersh starts.
+    function fit() {
+      const cell = term._core._renderService.dimensions.css.cell;
+      const style = getComputedStyle(host);
+      const width = host.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const height = host.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      const cols = Math.max(20, Math.floor(width / cell.width));
+      const rows = Math.max(5, Math.floor(height / cell.height));
+      term.resize(cols, rows);
+      window.termSize = { cols, rows };
+    }
+
+    document.fonts.ready.then(() => {
+      fit();
+      const events = new EventSource("/stream");
+      events.addEventListener("out", (e) => {
+        const raw = atob(e.data);
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+        term.write(bytes);
+      });
+      events.addEventListener("title", (e) => {
+        document.getElementById("title").textContent = e.data;
+      });
+      window.termReady = true;
+    });
+  </script>
+</body>
+</html>

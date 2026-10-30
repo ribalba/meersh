@@ -1,0 +1,36 @@
+# The .deb and .rpm for a release, built by packaging/dist.sh with nfpm. ARCH (amd64 or
+# arm64), VERSION and BIN_DIR (the cargo output directory) come from the environment.
+name: meersh
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+release: 1
+section: shells
+priority: optional
+maintainer: Didi Hoffmann
+homepage: https://github.com/ribalba/meersh
+license: AGPL-3.0-or-later
+description: |
+  Object oriented shell with language models as pipeline stages.
+  meersh passes typed records between commands, lets language models work on them as
+  pipeline stages and checks every action of a model against ownership and policy.
+
+contents:
+  - src: ${BIN_DIR}/meersh
+    dst: /usr/bin/meersh
+    expand: true
+    file_info:
+      mode: 0755
+  - src: ${BIN_DIR}/meer-box
+    dst: /usr/bin/meer-box
+    expand: true
+    file_info:
+      mode: 0755
+  - src: config.example.toml
+    dst: /usr/share/doc/meersh/config.example.toml
+    file_info:
+      mode: 0644
+  - src: LICENSE
+    dst: /usr/share/doc/meersh/LICENSE
+    file_info:
+      mode: 0644

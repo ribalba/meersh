@@ -1,0 +1,38 @@
+# Copy to ~/.config/meersh/config.toml (or point MEERSH_CONFIG at it).
+# Without a config file meersh uses the "local" and "claude" backends shown here.
+
+[llm]
+default = "local"        # backend used when a command gets no --backend
+# assistant = "claude"   # backend for ?, ai and llm without input. It sees only the request,
+                         # the directory and types, never your data, and is much faster than
+                         # a 4B model on a CPU (6 s instead of about a minute)
+cache = true             # answer repeated requests from ~/.cache/meersh/llm
+max_input_chars = 40000  # budget for the serialized pipeline input per request
+batch_size = 25          # rows per request for llm map, llm where and llm parse
+
+# Ollama on this machine. Without `model` the first installed model is used.
+[llm.backends.local]
+kind = "ollama"
+url = "http://localhost:11434"
+model = "qwen3:4b"
+think = false            # skip the reasoning phase of thinking models, much faster
+num_ctx = 16384          # Ollama's default window silently cuts long prompts
+embed_model = "nomic-embed-text"  # for llm embed and llm search, when the chat model cannot embed
+
+# Claude Code through `claude -p`. Uses your existing login. Tools are switched off.
+[llm.backends.claude]
+kind = "claude-code"
+model = "sonnet"
+
+# Any OpenAI compatible server: llama.cpp, vLLM, LM Studio, or a hosted API.
+[llm.backends.llamacpp]
+kind = "openai"
+url = "http://localhost:8080/v1"
+model = "default"
+# api_key_env = "OPENAI_API_KEY"
+
+# Once a day an interactive meersh reads the version in Cargo.toml on the main branch on GitHub.
+# When it is newer, meersh offers to build it and install it where meersh runs from.
+# MEERSH_NO_UPDATE_CHECK=1 in the environment turns the check off as well.
+[update]
+check = true

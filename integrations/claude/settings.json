@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "deny": ["Bash", "Edit", "Write", "NotebookEdit"],
+    "allow": ["mcp__meersh"]
+  }
+}

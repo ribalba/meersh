@@ -1,0 +1,29 @@
+[package]
+name = "meersh-coreutils"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+meersh-engine.workspace = true
+chrono.workspace = true
+glob.workspace = true
+nix.workspace = true
+sysinfo.workspace = true
+trash.workspace = true
+serde_json.workspace = true
+# `open Cargo.toml` should keep the key order of the file.
+toml = { workspace = true, features = ["preserve_order"] }
+# The mechanism of cp and mv, used as libraries the way Nushell does. uucore only for the
+# message catalog of uu_cp. Neither uutils crate has default features to turn off.
+uu_cp = "0.12.0"
+uu_mv = "0.12.0"
+uucore = { version = "0.12.0", default-features = false }
+
+[dev-dependencies]
+# `each` and `where` for pipelines in the tests.
+meersh-cmds.workspace = true
+
+[[bin]]
+name = "meer-box"
+path = "src/bin/meer-box.rs"

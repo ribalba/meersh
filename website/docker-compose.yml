@@ -1,0 +1,8 @@
+# For Coolify, like the meerpic and meerora sites. The proxy finds the container on port 80.
+services:
+  website:
+    build: .
+    image: meersh-website
+    expose:
+      - "80"
+    restart: unless-stopped
