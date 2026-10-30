@@ -4,12 +4,13 @@ use std::sync::{Arc, Mutex};
 
 use meersh_engine::authority::{Plan, absolute};
 use meersh_engine::parser::Statement;
+use meersh_engine::render::{RenderOptions, render};
 use meersh_engine::util::expand_path;
 use meersh_engine::{Consent, Engine, ExecMode, PlannedAction, Signature, TypeInfo, Verdict};
 use serde_json::{Map, Value as Json, json};
 
 use crate::typed::{self, TypedTool};
-use crate::{Outcome, Server};
+use crate::{Client, Outcome, Server};
 
 /// Commands that change who may do what. They do not authorize anything themselves, so an
 /// agent could otherwise grant itself rights. They stay with the user.
@@ -19,6 +20,15 @@ const MAX_LEASE_MINUTES: i64 = 24 * 60;
 
 /// How many blocked actions the hint names before it summarises the rest.
 const HINT_ACTIONS: usize = 10;
+
+/// How many actions the question to the user lists before it summarises the rest.
+const QUESTION_ACTIONS: usize = 40;
+
+/// How much of the pipeline the question shows. The file tools carry the whole content in it.
+const QUESTION_SOURCE: usize = 600;
+
+const DECLINED: &str = "Nothing was changed, because the user declined this plan. Do not try to reach the same \
+                        goal another way. Ask the user what to do instead.";
 
 fn object(properties: Json, required: &[&str]) -> Json {
     let mut schema = json!({"type": "object", "properties": properties, "additionalProperties": false});
@@ -44,16 +54,18 @@ fn definitions(me: &str) -> Vec<Json> {
             "name": "run",
             "description": format!(
                 "Run a meersh pipeline as {me} and return its result as JSON. Several statements return a list of \
-                 results. Every pipeline is planned first. When an action needs the user, nothing changes and the \
-                 result is {{applied: false, plan, hint}}. Use help to look up commands."
+                 results. Every pipeline is planned first. When an action needs the user, meersh asks the user \
+                 through your client if it can and applies the plan after an approval. If the user declines or \
+                 cannot be asked, nothing changes and the result is {{applied: false, plan, hint}}, with \
+                 declined: true when the user said no. Use help to look up commands."
             ),
             "inputSchema": pipeline_schema(),
         }),
         json!({
             "name": "plan",
             "description": "Show the actions a pipeline would take, without changing anything. Each action has a \
-                            decision (allow, ask or deny) and the reason. needs_user is true when run would stop \
-                            and return the plan.",
+                            decision (allow, ask or deny) and the reason. needs_user is true when run would ask \
+                            the user or return the plan.",
             "inputSchema": pipeline_schema(),
         }),
         json!({
@@ -162,9 +174,75 @@ fn required_string<'a>(args: &'a Json, name: &str) -> Result<&'a str, Outcome> {
     string_arg(args, name)?.ok_or_else(|| Outcome::error(format!("missing argument '{name}'")))
 }
 
-/// The consent of an absent human. Only a plan in which every action is allowed goes through.
+/// Only a plan in which every action is allowed goes through without the user.
 fn needs_user(plan: &Plan) -> bool {
     plan.actions.iter().any(|a| a.verdict != Verdict::Allow)
+}
+
+/// The plan as plain text for the client to show the user, the counterpart of the table the
+/// REPL prints.
+fn question(plan: &Plan, src: &str, me: &str) -> String {
+    let shown: String = src.chars().take(QUESTION_SOURCE).collect();
+    let cut = if shown.len() < src.len() { " …" } else { "" };
+    let mut text = format!("{me} wants to run\n\n{shown}{cut}\n");
+    for note in &plan.notes {
+        text.push_str(&format!("\n{}\n# {} wrote this. {}\n", note.pipeline, note.principal, note.explanation));
+    }
+    let plain = RenderOptions { width: 100, color: false };
+    for review in &plan.reviews {
+        text.push_str(&format!("\n{}\n{}\n", review.title, render(&review.diff, &plain)));
+    }
+    text.push('\n');
+    for (i, action) in plan.actions.iter().enumerate().take(QUESTION_ACTIONS) {
+        text.push_str(&format!("{i}  {} {}  {}", action.action, action.target, action.verdict.as_str()));
+        if !action.reason.is_empty() {
+            text.push_str(&format!(", {}", action.reason));
+        }
+        if !action.reversible && action.verdict != Verdict::Deny {
+            text.push_str(", cannot be undone");
+        }
+        text.push('\n');
+    }
+    if plan.actions.len() > QUESTION_ACTIONS {
+        text.push_str(&format!("{} more\n", plan.actions.len() - QUESTION_ACTIONS));
+    }
+    let count = |v: Verdict| plan.actions.iter().filter(|a| a.verdict == v).count();
+    text.push_str(&match count(Verdict::Ask) {
+        1 => "\n1 action needs your approval.".to_string(),
+        n => format!("\n{n} actions need your approval."),
+    });
+    match count(Verdict::Deny) {
+        0 => {}
+        1 => text.push_str(" 1 is refused and stays out."),
+        n => text.push_str(&format!(" {n} are refused and stay out.")),
+    }
+    text
+}
+
+/// The form of the question. It is written out because an elicitation schema allows only
+/// type, properties and required. Accepting the form with reject is the same as declining it.
+fn decision_schema() -> Json {
+    json!({
+        "type": "object",
+        "properties": {"decision": {
+            "type": "string",
+            "title": "Decision",
+            "description": "approve applies the plan, reject changes nothing",
+            "enum": ["approve", "reject"],
+        }},
+        "required": ["decision"],
+    })
+}
+
+/// Asks the user through the client. `Some(true)` approves the plan, `Some(false)` means the
+/// user said no, and `None` that nobody could be asked. A plan whose only blocked actions are
+/// refused is not shown, because the user cannot approve them either.
+fn ask(client: &mut Client, plan: &Plan, src: &str, me: &str) -> Option<bool> {
+    if !plan.actions.iter().any(|a| a.verdict == Verdict::Ask) {
+        return None;
+    }
+    let answer = client.elicit(&question(plan, src, me), decision_schema())?;
+    Some(answer["action"] == "accept" && answer["content"]["decision"] == "approve")
 }
 
 fn action_json(action: &PlannedAction) -> Json {
@@ -302,9 +380,9 @@ impl Server {
     }
 
     /// `None` when there is no tool of that name.
-    pub(crate) fn call(&mut self, name: &str, args: &Json) -> Option<Outcome> {
+    pub(crate) fn call(&mut self, name: &str, args: &Json, client: &mut Client) -> Option<Outcome> {
         let outcome = match name {
-            "run" => required_string(args, "pipeline").map(|src| self.execute(src, None)),
+            "run" => required_string(args, "pipeline").map(|src| self.execute(src, None, client)),
             "plan" => required_string(args, "pipeline").map(|src| self.plan(src)),
             "help" => string_arg(args, "name").map(|name| self.help(name)),
             "ledger" => Ok(self.ledger()),
@@ -313,22 +391,26 @@ impl Server {
             }
             "lease" => self.lease(args),
             "release" => required_string(args, "path").map(|path| self.release(path)),
-            "read_file" | "write_file" | "edit_file" => file_pipeline(name, args).map(|src| self.execute(&src, None)),
+            "read_file" | "write_file" | "edit_file" => {
+                file_pipeline(name, args).map(|src| self.execute(&src, None, client))
+            }
             other => {
                 let tool = typed::find(&self.engine, other)?;
-                tool.pipeline(args).map(|src| self.execute(&src, Some(&src))).map_err(Outcome::error)
+                tool.pipeline(args).map(|src| self.execute(&src, Some(&src), client)).map_err(Outcome::error)
             }
         };
         Some(outcome.unwrap_or_else(|e| e))
     }
 
-    /// Plans the source, applies it when every action is allowed, and returns the plan
-    /// otherwise. `generated` is the pipeline a typed tool built, so the agent can show it.
-    fn execute(&mut self, src: &str, generated: Option<&str>) -> Outcome {
+    /// Plans the source and applies it when every action is allowed or the user approves it
+    /// through the client. Otherwise it returns the plan. `generated` is the pipeline a typed
+    /// tool built, so the agent can show it.
+    fn execute(&mut self, src: &str, generated: Option<&str>, client: &mut Client) -> Outcome {
         if let Some(name) = user_only_command(&self.engine, src) {
             return refuse_user_only(&name);
         }
         let me = self.principal.name();
+        let can_ask = self.can_ask;
         let mut outputs = Vec::new();
         let mut rejected = None;
         let result = self.engine.run_planned(
@@ -339,7 +421,13 @@ impl Server {
                 if !needs_user(plan) {
                     return Consent::Approve;
                 }
-                rejected = Some((plan_json(plan), hint(plan, &me)));
+                let answer = if can_ask { ask(client, plan, src, &me) } else { None };
+                if answer == Some(true) {
+                    return Consent::Approve;
+                }
+                let declined = answer == Some(false);
+                let why = if declined { DECLINED.to_string() } else { hint(plan, &me) };
+                rejected = Some((plan_json(plan), why, declined));
                 Consent::Reject
             },
             &mut |data| {
@@ -348,9 +436,12 @@ impl Server {
             },
         );
         outputs.retain(|v| !v.is_null());
-        if let Some((plan, mut hint)) = rejected {
+        if let Some((plan, mut hint, declined)) = rejected {
             let mut map = Map::new();
             map.insert("applied".into(), json!(false));
+            if declined {
+                map.insert("declined".into(), json!(true));
+            }
             if let Some(src) = generated {
                 map.insert("pipeline".into(), json!(src));
             }

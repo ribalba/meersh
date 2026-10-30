@@ -1,0 +1,31 @@
+#!/bin/sh
+# A login shell that gives a terminal meersh and everything else bash.
+# integrations/setup.sh --login-shell installs it as /usr/local/bin/meersh-login/bash.
+#
+# meersh starts when stdin and stdout are a terminal and there are no arguments other than
+# -l, --login and -i. ssh and su commands, scp, rsync, sftp, the display manager and every
+# program that runs `$SHELL -c` get bash with the same arguments, so POSIX syntax keeps
+# working. Without a meersh in ~/.local/bin, for example as root, it is bash throughout.
+#
+# The file is called bash on purpose. SDDM recognises bash by that name and starts the
+# session through `$SHELL --login`, which lands in bash here, so the desktop gets the same
+# environment as with bash. Under any other name SDDM reads only /etc/profile and ~/.profile.
+
+meersh=$HOME/.local/bin/meersh
+interactive=yes
+for arg in "$@"; do
+    case $arg in
+        -l | --login | -i) ;;
+        *) interactive=no ;;
+    esac
+done
+[ -t 0 ] && [ -t 1 ] || interactive=no
+[ -x "$meersh" ] || interactive=no
+
+if [ "$interactive" = no ]; then
+    exec /bin/bash "$@"
+fi
+# A script never sees the dash that login and sshd put in front of argv[0], so every
+# interactive start counts as a login. bash reads /etc/profile and ~/.bash_profile first,
+# and meersh starts with the environment a bash login would have.
+exec /bin/bash --login -c 'exec "$0"' "$meersh"

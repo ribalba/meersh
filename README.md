@@ -36,6 +36,8 @@ make install PREFIX=~/.local
 
 To make Claude Code use meersh instead of bash, with every security feature in force, follow [integrations/claude](integrations/claude/README.md).
 
+`integrations/setup.sh` sets up a desktop in one go. New terminals in Konsole, Ptyxis and VS Code start the newest build of the checkout, and Claude Code gets meersh as its shell with Bash as a fallback. With `--login-shell` it also makes meersh the login shell. Terminals then get meersh and everything else, such as ssh commands, scp and the display manager, gets bash.
+
 Language models run locally through Ollama by default. Claude Code and OpenAI compatible servers can be configured, see [config.example.toml](config.example.toml). Startup definitions, aliases and policy rules go into `~/.config/meersh/init.msh`.
 
 An interactive meersh checks once a day whether the version on the main branch is newer than itself. If it is, meersh offers to build it from a clone in `~/.cache/meersh/source` and install it into the prefix it runs from, then restarts. `s` skips that version. A meersh it cannot write to, such as one from a package, only says that an update exists. Set `check = false` under `[update]` in the config or `MEERSH_NO_UPDATE_CHECK=1` to turn the check off. Raising the version in `Cargo.toml` on main is what releases it.

@@ -83,6 +83,31 @@ fn call(id: i64, tool: &str, arguments: Json) -> Json {
     request(id, "tools/call", json!({"name": tool, "arguments": arguments}))
 }
 
+fn initialize(capabilities: Json) -> Json {
+    request(
+        0,
+        "initialize",
+        json!({"protocolVersion": "2025-11-25", "capabilities": capabilities, "clientInfo": {"name": "t"}}),
+    )
+}
+
+/// The client's answer to the server's question `ask-<n>`.
+fn answer(n: u64, result: Json) -> Json {
+    json!({"jsonrpc": "2.0", "id": format!("ask-{n}"), "result": result})
+}
+
+/// Deleting outside the project is refused by default. This rule makes it a question.
+fn ask_before_deleting(engine: &Engine) {
+    engine.authority.add_rule(Rule {
+        verdict: Verdict::Ask,
+        principal: "agent:*".into(),
+        cap: "fs.delete".into(),
+        condition: None,
+        task: None,
+        text: "ask before agents delete in tests".into(),
+    });
+}
+
 /// The JSON inside the text content of a tool result.
 fn content(reply: &Json) -> Json {
     let result = &reply["result"];
@@ -191,6 +216,85 @@ fn an_action_that_needs_the_user_returns_the_plan() {
     assert_eq!(plan["needs_user"], json!(true));
     assert_eq!(plan["plan"].as_array().unwrap().len(), 1);
     assert!(foreign.exists());
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn the_user_approves_a_plan_through_the_client() {
+    let engine = engine();
+    ask_before_deleting(&engine);
+    let dir = temp("elicit");
+    let foreign = dir.join("foreign.txt");
+    std::fs::write(&foreign, "written outside meersh").unwrap();
+
+    let replies = session(
+        &engine,
+        "test",
+        &[
+            initialize(json!({"elicitation": {}})),
+            call(1, "run", json!({"pipeline": format!("remove {}", quoted(&foreign))})),
+            // While the question is open, a ping is answered and a second call waits.
+            request(2, "ping", json!({})),
+            call(3, "run", json!({"pipeline": "[1 2] | length"})),
+            answer(1, json!({"action": "accept", "content": {"decision": "approve"}})),
+        ],
+    );
+    assert_eq!(replies.len(), 5, "{replies:?}");
+    let question = &replies[1];
+    assert_eq!(question["method"], "elicitation/create");
+    let message = question["params"]["message"].as_str().unwrap();
+    assert!(message.contains("agent:test wants to run"), "{message}");
+    assert!(message.contains(&format!("0  delete {}  ask", foreign.display())), "{message}");
+    assert_eq!(question["params"]["requestedSchema"]["required"], json!(["decision"]));
+    assert_eq!(replies[2], json!({"jsonrpc": "2.0", "id": 2, "result": {}}));
+    assert_eq!(replies[3]["id"], 1);
+    assert_eq!(content(&replies[3])["action"], "deleted");
+    assert!(!foreign.exists());
+    assert_eq!(content(&replies[4]), json!(2));
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn a_plan_the_user_declines_changes_nothing() {
+    let engine = engine();
+    ask_before_deleting(&engine);
+    let dir = temp("decline");
+    let foreign = dir.join("foreign.txt");
+    std::fs::write(&foreign, "written outside meersh").unwrap();
+    let run = call(1, "run", json!({"pipeline": format!("remove {}", quoted(&foreign))}));
+
+    for result in [
+        json!({"action": "decline"}),
+        json!({"action": "cancel"}),
+        json!({"action": "accept", "content": {"decision": "reject"}}),
+    ] {
+        let replies = session(
+            &engine,
+            "test",
+            &[initialize(json!({"elicitation": {"form": {}}})), run.clone(), answer(1, result)],
+        );
+        let outcome = content(&replies[2]);
+        assert_eq!(outcome["applied"], json!(false), "{outcome}");
+        assert_eq!(outcome["declined"], json!(true));
+        assert!(outcome["hint"].as_str().unwrap().contains("declined"), "{outcome}");
+        assert!(foreign.exists());
+    }
+
+    // An error instead of an answer, a cancelled call and a client without forms get the plan back.
+    let error = json!({"jsonrpc": "2.0", "id": "ask-1", "error": {"code": -32601, "message": "no forms"}});
+    let cancel = json!({"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {"requestId": 1}});
+    for messages in [
+        vec![initialize(json!({"elicitation": {}})), run.clone(), error],
+        vec![initialize(json!({"elicitation": {}})), run.clone(), cancel],
+        vec![initialize(json!({"elicitation": {"url": {}}})), run.clone()],
+    ] {
+        let replies = session(&engine, "test", &messages);
+        let outcome = content(replies.last().unwrap());
+        assert_eq!(outcome["applied"], json!(false), "{outcome}");
+        assert_eq!(outcome.get("declined"), None, "{outcome}");
+        assert!(outcome["hint"].as_str().unwrap().contains("policy allow agent:test fs.delete"), "{outcome}");
+        assert!(foreign.exists());
+    }
     std::fs::remove_dir_all(dir).unwrap();
 }
 

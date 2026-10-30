@@ -7,6 +7,7 @@ it created, gets your approval for everything else, and leaves a journal you can
 | File | What it is |
 | --- | --- |
 | [CLAUDE-meersh.md](CLAUDE-meersh.md) | The section to paste into `~/.claude/CLAUDE.md` |
+| [CLAUDE-meersh-fallback.md](CLAUDE-meersh-fallback.md) | The same section for a setup that keeps Bash as a fallback |
 | [settings.json](settings.json) | The permissions to merge into `~/.claude/settings.json` |
 | [init.msh](init.msh) | The meersh policy for agents, for `~/.config/meersh/init.msh` |
 
@@ -44,11 +45,22 @@ it created, gets your approval for everything else, and leaves a journal you can
 6. Check it. `claude mcp list` should show meersh as connected. In a new session, ask the
    agent to list the files of the project. It should call `run` with `ls`.
 
+To keep Bash, Edit and Write as a fallback, merge only the `allow` part in step 4 and paste
+[CLAUDE-meersh-fallback.md](CLAUDE-meersh-fallback.md) in step 5. The agent then uses meersh
+and falls back to Bash only when meersh cannot do the job. [../setup.sh](../setup.sh) sets up
+this variant together with Konsole, Ptyxis and VS Code.
+
 ## How approvals reach you
 
-Over MCP there is no human to ask, so a plan that needs you is not applied. The agent gets
-the plan and a hint and tells you what it wanted. You then run the pipeline yourself in
-meersh, see the same plan and approve it, row by row if you like.
+When a plan needs you, meersh asks you through Claude Code (MCP elicitation). A dialog shows
+the pipeline and every action with its decision and reason, and you choose approve or reject.
+Only an approval applies the plan. When you reject or dismiss the dialog, nothing changes and
+the agent gets `applied: false` and `declined: true` back.
+
+A client that cannot show such a dialog, for example `claude -p`, gets the plan and a hint
+instead and tells you what it wanted. So does a plan whose blocked actions are all refused,
+because you could not approve them either. You then run the pipeline yourself in meersh,
+see the same plan and approve it, row by row if you like.
 
 ```text
 meersh

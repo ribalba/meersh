@@ -360,7 +360,7 @@ Coding agents work through a bash tool today. Their output is text they have to 
 
 => I love this
 
-[integrations/claude](integrations/claude/README.md) has the CLAUDE.md section, the Claude Code settings and the policy that make an agent use meersh instead of bash. Programs a rule allows run directly under Landlock, confined to the project. Programs that need a human come back to the agent as a plan.
+[integrations/claude](integrations/claude/README.md) has the CLAUDE.md section, the Claude Code settings and the policy that make an agent use meersh instead of bash. Programs a rule allows run directly under Landlock, confined to the project. Programs that need a human are shown to the user in a dialog of the agent's client (MCP elicitation) and run only after an approval. A client without such dialogs gets the plan back instead.
 
 ## 9. What is new
 
